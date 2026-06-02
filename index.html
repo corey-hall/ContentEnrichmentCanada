@@ -497,8 +497,8 @@ let GUIDED = JSON.parse(JSON.stringify(GUIDED_BASE)); // working copy, merged la
 // Google wraps the JSON in  google.visualization.Query.setResponse({...});
 // We strip the wrapper and parse the inner object.
 function parseGvizResponse(text) {
-  // Apps Script returns plain JSON array — no JSONP wrapper to strip
-  const rows = JSON.parse(text);
+  const json = JSON.parse(text);
+  const rows = json.states; // pull the states array
   const cols = rows.length > 0 ? Object.keys(rows[0]) : [];
   return { cols, rows: rows.map(r => {
     const row = {};
