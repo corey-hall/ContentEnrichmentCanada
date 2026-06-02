@@ -526,17 +526,17 @@ if (!text || text.trim().length < 20) throw new Error('Empty response');
 const { cols, rows } = parseGvizResponse(text);
 
     // Find column names (case-insensitive)
-    const stateKey  = cols.find(k => k.toLowerCase().trim() === 'state') || cols[0];
-    const netNewKey = cols.find(k => k.toLowerCase().includes('total net new')) || cols[1];
+    const stateKey = cols.find(k => k.toLowerCase().trim() === 'state') || cols[0];
+const doneKey  = cols.find(k => k.toLowerCase().trim() === 'done') || 'done';
 
-    const sheetData = {};
-    rows.forEach(row => {
-      const state = row[stateKey];
-      const netNew = parseInt((row[netNewKey] || '').replace(/,/g, ''), 10);
-      if (state && CANADIAN_PROVINCES.has(state) && !isNaN(netNew) && netNew > 0) {
-        sheetData[state] = (sheetData[state] || 0) + netNew;
-      }
-    });
+const sheetData = {};
+rows.forEach(row => {
+  const state = row[stateKey];
+  const done  = parseInt((row[doneKey] || '').replace(/,/g, ''), 10);
+  if (state && CANADIAN_PROVINCES.has(state) && !isNaN(done) && done > 0) {
+    sheetData[state] = (sheetData[state] || 0) + done;
+  }
+});
 
     SHEET_DATA = sheetData;
 
