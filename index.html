@@ -497,21 +497,17 @@ let GUIDED = JSON.parse(JSON.stringify(GUIDED_BASE)); // working copy, merged la
 // Google wraps the JSON in  google.visualization.Query.setResponse({...});
 // We strip the wrapper and parse the inner object.
 function parseGvizResponse(text) {
-  // Strip the JSONP wrapper
-  const start = text.indexOf('{');
-  const end   = text.lastIndexOf('}');
-  if (start === -1 || end === -1) throw new Error('Unexpected gviz format');
-  const json = JSON.parse(text.slice(start, end + 1));
-
-  const cols = json.table.cols.map(c => c.label || c.id);  // column headers
-  const rows = (json.table.rows || []).map(r => {
+  // Apps Script returns plain JSON array — no JSONP wrapper to strip
+  const rows = JSON.parse(text);
+  const cols = rows.length > 0 ? Object.keys(rows[0]) : [];
+  return { cols, rows: rows.map(r => {
     const row = {};
-    (r.c || []).forEach((cell, i) => {
-      row[cols[i]] = cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : '') : '';
+    cols.forEach(col => {
+      const val = r[col];
+      row[col] = val !== null && val !== undefined ? String(val) : '';
     });
     return row;
-  });
-  return { cols, rows };
+  })};
 }
 
 // ─── FETCH SHEET ──────────────────────────────────────────────────────────────
@@ -526,9 +522,8 @@ async function fetchSheetData() {
     const res = await fetch(GVIZ_URL, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const text = await res.text();
-    if (!text || text.trim().length < 20) throw new Error('Empty response');
-
-    const { cols, rows } = parseGvizResponse(text);
+if (!text || text.trim().length < 20) throw new Error('Empty response');
+const { cols, rows } = parseGvizResponse(text);
 
     // Find column names (case-insensitive)
     const stateKey  = cols.find(k => k.toLowerCase().trim() === 'state') || cols[0];
